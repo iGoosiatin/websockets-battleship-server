@@ -10,12 +10,12 @@
     "strictNullChecks": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "removeComments": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
     "strictPropertyInitialization": false,
     "target": "ES2020",
-    "noEmit": true,
   },
   "include": ["./index.ts", "src/**/*"],
 }
