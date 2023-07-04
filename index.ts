@@ -1,7 +1,11 @@
-import { httpServer } from './src/http_server';
+import HttpServer from './src/http_server';
+import WsServer from './src/ws_server';
 
 const HTTP_PORT = 8181;
+const WS_PORT = 3000;
 
-httpServer.listen(HTTP_PORT, () => {
-  console.log(`Start static http server on the ${HTTP_PORT} port!`);
-});
+const httpServer = new HttpServer(HTTP_PORT);
+const wsServer = new WsServer(WS_PORT);
+
+httpServer.start();
+wsServer.start();
