@@ -1,5 +1,5 @@
 import RoomModel from './room';
-import { AuthedWebSocket } from '../types/common';
+import { AuthedWebSocket, Ship } from '../types/common';
 
 export default class RoomService {
   private rooms: RoomModel[] = [];
@@ -12,13 +12,28 @@ export default class RoomService {
 
   addPlayerToRoom(ws: AuthedWebSocket, indexRoom: number) {
     const room = this.rooms.find(({ roomId }) => roomId === indexRoom);
-    if (room) {
-      room.roomUsers.push({ name: ws.name, index: ws.index });
-      room.sockets.push(ws);
-
-      room.createGame();
+    if (!room) {
+      return;
     }
-    return null;
+
+    // Do not enter your own room
+    if (room.roomUsers.find((roomUser) => roomUser.index === ws.index)) {
+      return;
+    }
+
+    room.roomUsers.push({ name: ws.name, index: ws.index });
+    room.sockets.push(ws);
+
+    room.createGame();
+  }
+
+  addShipsToGame(gameId: number, playerIndex: number, ships: Ship[]) {
+    const room = this.rooms.find(({ game }) => game.idGame === gameId);
+    if (!room) {
+      return;
+    }
+
+    room.setPlayerShips(playerIndex, ships);
   }
 
   getRooms() {

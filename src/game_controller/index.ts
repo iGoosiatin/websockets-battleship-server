@@ -62,9 +62,16 @@ export default class GameController {
         this.broadcast(roomsResponse);
         break;
       }
+      case IncomingCommand.AddShips: {
+        const {
+          data: { gameId, indexPlayer, ships },
+        } = message;
+
+        this.roomService.addShipsToGame(gameId, indexPlayer, ships);
+        break;
+      }
       default: {
         console.log('Unknown command received');
-        return null;
       }
     }
   }

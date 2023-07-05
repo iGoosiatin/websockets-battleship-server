@@ -1,4 +1,4 @@
-import { Identification, ShipToAdd } from './common';
+import { Identification, Ship } from './common';
 
 export enum IncomingCommand {
   Register = 'reg',
@@ -24,7 +24,7 @@ export interface GeneralGameData {
 }
 
 export interface AddShipsData extends GeneralGameData {
-  ships: ShipToAdd[];
+  ships: Ship[];
 }
 
 export interface AttackData extends GeneralGameData {

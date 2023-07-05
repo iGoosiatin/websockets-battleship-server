@@ -13,7 +13,7 @@ export interface Position {
   y: number;
 }
 
-export interface ShipToAdd {
+export interface Ship {
   position: Position;
   direction: boolean;
   length: number;
