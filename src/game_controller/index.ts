@@ -1,9 +1,9 @@
-import { IncomingCommand, IncomingMessage } from '../types/incoming';
+import { AttackData, IncomingCommand, IncomingMessage } from '../types/incoming';
 import UserService from '../user/user_service';
 import { OutgoingCommand } from '../types/outgoing';
 import { WebSocket } from 'ws';
 import RoomService from '../room/room_service';
-import { AuthedWebSocket } from '../types/common';
+import { AuthedWebSocket, Position } from '../types/common';
 import { buildOutgoingMessage } from '../utils';
 
 export default class GameController {
@@ -68,6 +68,25 @@ export default class GameController {
         } = message;
 
         this.roomService.addShipsToGame(gameId, indexPlayer, ships);
+        break;
+      }
+      case IncomingCommand.Attack:
+      case IncomingCommand.RandomAttack: {
+        const { data } = message;
+        const { gameId, indexPlayer } = data;
+
+        const { x, y } = data as AttackData;
+
+        const target: Position | null = x !== undefined && y !== undefined ? { x, y } : null;
+
+        const isEndOfGame = this.roomService.handleAttack(gameId, indexPlayer, target);
+
+        if (isEndOfGame) {
+          this.userService.processWinner(indexPlayer);
+          const winners = this.userService.getWinners();
+          const winnersResponse = buildOutgoingMessage(OutgoingCommand.UpdateWinners, winners);
+          this.broadcast(winnersResponse);
+        }
         break;
       }
       default: {

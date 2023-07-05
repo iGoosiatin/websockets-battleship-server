@@ -1,5 +1,5 @@
 import RoomModel from './room';
-import { AuthedWebSocket, Ship } from '../types/common';
+import { AuthedWebSocket, Position, Ship } from '../types/common';
 
 export default class RoomService {
   private rooms: RoomModel[] = [];
@@ -11,7 +11,7 @@ export default class RoomService {
   }
 
   addPlayerToRoom(ws: AuthedWebSocket, indexRoom: number) {
-    const room = this.rooms.find(({ roomId }) => roomId === indexRoom);
+    const room = this.getRoomByRoomId(indexRoom);
     if (!room) {
       return;
     }
@@ -28,7 +28,7 @@ export default class RoomService {
   }
 
   addShipsToGame(gameId: number, playerIndex: number, ships: Ship[]) {
-    const room = this.rooms.find(({ game }) => game.idGame === gameId);
+    const room = this.getRoomByGameId(gameId);
     if (!room) {
       return;
     }
@@ -36,9 +36,28 @@ export default class RoomService {
     room.setPlayerShips(playerIndex, ships);
   }
 
+  handleAttack(gameId: number, playerId: number, target: Position | null) {
+    const room = this.getRoomByGameId(gameId);
+    if (!room) {
+      return;
+    }
+
+    return room.handleAttack(playerId, target);
+  }
+
   getRooms() {
     return this.rooms
       .filter(({ roomUsers }) => roomUsers.length < 2)
       .map(({ roomId, roomUsers }) => ({ roomId, roomUsers }));
+  }
+
+  private getRoomByRoomId(id: number) {
+    const room = this.rooms.find(({ roomId }) => roomId === id);
+    return room || null;
+  }
+
+  private getRoomByGameId(id: number) {
+    const room = this.rooms.find(({ game }) => game.idGame === id);
+    return room || null;
   }
 }

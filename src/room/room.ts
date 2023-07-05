@@ -1,5 +1,5 @@
 import Game from '../game';
-import { AuthedWebSocket, Room, Ship, User } from '../types/common';
+import { AuthedWebSocket, Position, Room, Ship, User } from '../types/common';
 import { CreateGameData, OutgoingCommand, StartGameData } from '../types/outgoing';
 import { buildOutgoingMessage } from '../utils';
 
@@ -23,7 +23,7 @@ export default class RoomModel implements Room {
     this.sockets.forEach((ws) => {
       const gameDetails: CreateGameData = {
         idGame: this.game.idGame,
-        idPlayer: this.roomUsers.find(({ index }) => index !== ws.index)?.index as number,
+        idPlayer: this.getOtherPlayer(ws.index),
       };
       const createGameResponse = buildOutgoingMessage(OutgoingCommand.CreateGame, gameDetails);
       ws.send(createGameResponse);
@@ -38,6 +38,7 @@ export default class RoomModel implements Room {
     this.game.ships.set(playerIndex, ships);
 
     if (this.game.ships.size === 2) {
+      this.game.createBattlefieldMatrix();
       const currentPlayerIndex = this.game.getCurrentPlayer();
 
       this.sockets.forEach((ws) => {
@@ -49,5 +50,27 @@ export default class RoomModel implements Room {
         ws.send(createGameResponse);
       });
     }
+  }
+
+  handleAttack(playerId: number, target: Position | null): boolean {
+    const enemyId = this.getOtherPlayer(playerId);
+    const result = this.game.handleAttack(playerId, enemyId, target);
+    const isEndOfGame = this.game.checkEndOfGame(enemyId);
+
+    this.sockets.forEach((ws) => {
+      const createGameResponse = buildOutgoingMessage(OutgoingCommand.Attack, result);
+      ws.send(createGameResponse);
+
+      if (isEndOfGame) {
+        const endOfGameResponse = buildOutgoingMessage(OutgoingCommand.Finish, { winPlayer: playerId });
+        ws.send(endOfGameResponse);
+      }
+    });
+
+    return isEndOfGame;
+  }
+
+  private getOtherPlayer(currentPlayerId: number) {
+    return this.roomUsers.find(({ index }) => index !== currentPlayerId)?.index as number;
   }
 }

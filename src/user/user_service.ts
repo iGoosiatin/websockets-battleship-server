@@ -43,4 +43,13 @@ export default class UserService {
   getWinners() {
     return this.winners;
   }
+
+  processWinner(playerId: number) {
+    const user = this.users.find(({ index }) => index === playerId) as UserModel;
+    this.winners = this.winners.map(({ name, wins }) =>
+      name === user.name ? { name, wins: wins + 1 } : { name, wins },
+    );
+
+    console.log(this.winners);
+  }
 }

@@ -4,9 +4,18 @@ export interface Identification {
   id: number;
 }
 
-export type ShipType = 'small' | 'medium' | 'large' | 'huge';
+export enum ShipType {
+  Small = 'small',
+  Medium = 'medium',
+  Large = 'large',
+  huge = 'huge',
+}
 
-export type AttackStatus = 'miss' | 'killed' | 'shot';
+export enum AttackStatus {
+  Miss = 'miss',
+  Killed = 'killed',
+  Shot = 'shot',
+}
 
 export interface Position {
   x: number;
