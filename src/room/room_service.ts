@@ -5,6 +5,11 @@ export default class RoomService {
   private rooms: RoomModel[] = [];
 
   createRoom(ws: AuthedWebSocket) {
+    const existingRoom = this.getRoomByUserId(ws.index);
+    if (existingRoom) {
+      return null;
+    }
+
     const room = new RoomModel(ws);
     this.rooms.push(room);
     return room;
@@ -58,6 +63,11 @@ export default class RoomService {
 
   private getRoomByGameId(id: number) {
     const room = this.rooms.find(({ game }) => game.idGame === id);
+    return room || null;
+  }
+
+  private getRoomByUserId(id: number) {
+    const room = this.rooms.find(({ roomUsers }) => roomUsers.find((roomUser) => roomUser.index === id));
     return room || null;
   }
 }

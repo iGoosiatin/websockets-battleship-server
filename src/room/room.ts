@@ -1,5 +1,5 @@
 import Game from '../game';
-import { AuthedWebSocket, Position, Room, Ship, User } from '../types/common';
+import { AttackStatus, AuthedWebSocket, Position, Room, Ship, User } from '../types/common';
 import { CreateGameData, OutgoingCommand, StartGameData } from '../types/outgoing';
 import { buildOutgoingMessage } from '../utils';
 
@@ -7,6 +7,8 @@ export default class RoomModel implements Room {
   private static index = 0;
   sockets: AuthedWebSocket[] = [];
   roomId: number;
+  endOfGame = false;
+  attackInProcess = false;
   roomUsers: User[] = [];
   game: Game;
 
@@ -23,7 +25,7 @@ export default class RoomModel implements Room {
     this.sockets.forEach((ws) => {
       const gameDetails: CreateGameData = {
         idGame: this.game.idGame,
-        idPlayer: this.getOtherPlayer(ws.index),
+        idPlayer: ws.index,
       };
       const createGameResponse = buildOutgoingMessage(OutgoingCommand.CreateGame, gameDetails);
       ws.send(createGameResponse);
@@ -53,21 +55,37 @@ export default class RoomModel implements Room {
   }
 
   handleAttack(playerId: number, target: Position | null): boolean {
+    if (this.attackInProcess || this.endOfGame) {
+      return false;
+    }
+    const currentPlayerId = this.game.getCurrentPlayer();
+
+    if (currentPlayerId !== playerId) {
+      return false;
+    }
+
+    this.attackInProcess = true;
     const enemyId = this.getOtherPlayer(playerId);
     const result = this.game.handleAttack(playerId, enemyId, target);
-    const isEndOfGame = this.game.checkEndOfGame(enemyId);
+    this.endOfGame = this.game.checkEndOfGame(enemyId);
 
     this.sockets.forEach((ws) => {
       const createGameResponse = buildOutgoingMessage(OutgoingCommand.Attack, result);
       ws.send(createGameResponse);
 
-      if (isEndOfGame) {
+      if (result.status === AttackStatus.Miss) {
+        this.game.setCurrentPlayer(enemyId);
+        const changeTurnResponse = buildOutgoingMessage(OutgoingCommand.ChangeTurn, { currentPlayer: enemyId });
+        ws.send(changeTurnResponse);
+      }
+
+      if (this.endOfGame) {
         const endOfGameResponse = buildOutgoingMessage(OutgoingCommand.Finish, { winPlayer: playerId });
         ws.send(endOfGameResponse);
       }
     });
-
-    return isEndOfGame;
+    this.attackInProcess = false;
+    return this.endOfGame;
   }
 
   private getOtherPlayer(currentPlayerId: number) {

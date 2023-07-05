@@ -17,10 +17,6 @@ export default class WsServer {
       console.log(`WebSocker server is listening on the ${this.port} port!`);
     });
 
-    this.server.on('custom', () => {
-      console.log('custom event');
-    });
-
     this.server.on('connection', (ws) => {
       ws.on('error', console.error);
 

@@ -42,11 +42,13 @@ export default class GameController {
         break;
       }
       case IncomingCommand.CreateRoom: {
-        this.roomService.createRoom(ws as AuthedWebSocket);
+        const room = this.roomService.createRoom(ws as AuthedWebSocket);
 
-        const rooms = this.roomService.getRooms();
-        const roomsResponse = buildOutgoingMessage(OutgoingCommand.UpdateRoom, rooms);
-        this.broadcast(roomsResponse);
+        if (room) {
+          const rooms = this.roomService.getRooms();
+          const roomsResponse = buildOutgoingMessage(OutgoingCommand.UpdateRoom, rooms);
+          this.broadcast(roomsResponse);
+        }
         break;
       }
 

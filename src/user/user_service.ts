@@ -49,7 +49,5 @@ export default class UserService {
     this.winners = this.winners.map(({ name, wins }) =>
       name === user.name ? { name, wins: wins + 1 } : { name, wins },
     );
-
-    console.log(this.winners);
   }
 }
