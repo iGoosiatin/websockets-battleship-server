@@ -1,9 +1,10 @@
 import { IncomingCommand, IncomingMessage } from '../types/incoming';
 import UserService from '../user/user_service';
-import { OutgoingCommand, OutgoingData } from '../types/outgoing';
+import { OutgoingCommand } from '../types/outgoing';
 import { WebSocket } from 'ws';
 import RoomService from '../room/room_service';
 import { AuthedWebSocket } from '../types/common';
+import { buildOutgoingMessage } from '../utils';
 
 export default class GameController {
   private broadcast: (message: string) => void;
@@ -28,24 +29,23 @@ export default class GameController {
           data: { name, password },
         } = message;
         const result = this.userService.register(name, password, ws);
-        const registrationResponse = this.buildOutgoingMessage(OutgoingCommand.Register, result);
+        const registrationResponse = buildOutgoingMessage(OutgoingCommand.Register, result);
         ws.send(registrationResponse);
 
         const rooms = this.roomService.getRooms();
-        const roomsResponse = this.buildOutgoingMessage(OutgoingCommand.UpdateRoom, rooms);
+        const roomsResponse = buildOutgoingMessage(OutgoingCommand.UpdateRoom, rooms);
         ws.send(roomsResponse);
 
         const winners = this.userService.getWinners();
-        const winnersResponse = this.buildOutgoingMessage(OutgoingCommand.UpdateWinners, winners);
+        const winnersResponse = buildOutgoingMessage(OutgoingCommand.UpdateWinners, winners);
         this.broadcast(winnersResponse);
         break;
       }
       case IncomingCommand.CreateRoom: {
-        const room = this.roomService.createRoom(ws as AuthedWebSocket);
-        // Create game here;
+        this.roomService.createRoom(ws as AuthedWebSocket);
 
         const rooms = this.roomService.getRooms();
-        const roomsResponse = this.buildOutgoingMessage(OutgoingCommand.UpdateRoom, rooms);
+        const roomsResponse = buildOutgoingMessage(OutgoingCommand.UpdateRoom, rooms);
         this.broadcast(roomsResponse);
         break;
       }
@@ -55,15 +55,10 @@ export default class GameController {
           data: { indexRoom },
         } = message;
 
-        const room = this.roomService.addPlayerToRoom(ws as AuthedWebSocket, indexRoom);
-
-        if (!room) {
-          break;
-        }
-        // invite to game
+        this.roomService.addPlayerToRoom(ws as AuthedWebSocket, indexRoom);
 
         const rooms = this.roomService.getRooms();
-        const roomsResponse = this.buildOutgoingMessage(OutgoingCommand.UpdateRoom, rooms);
+        const roomsResponse = buildOutgoingMessage(OutgoingCommand.UpdateRoom, rooms);
         this.broadcast(roomsResponse);
         break;
       }
@@ -86,13 +81,5 @@ export default class GameController {
       console.log(error);
       return null;
     }
-  }
-
-  private buildOutgoingMessage(type: OutgoingCommand, data: OutgoingData) {
-    return JSON.stringify({
-      type,
-      data: JSON.stringify(data),
-      id: 0,
-    });
   }
 }

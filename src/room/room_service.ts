@@ -15,7 +15,8 @@ export default class RoomService {
     if (room) {
       room.roomUsers.push({ name: ws.name, index: ws.index });
       room.sockets.push(ws);
-      return room;
+
+      room.createGame();
     }
     return null;
   }
