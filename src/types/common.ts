@@ -1,3 +1,5 @@
+import { WebSocket } from 'ws';
+
 export interface Identification {
   id: number;
 }
@@ -23,7 +25,14 @@ export interface User {
   index: number;
 }
 
+export interface AuthedWebSocket extends WebSocket, User {}
+
+export interface Winner {
+  name: string;
+  wins: number;
+}
+
 export interface Room {
   roomId: number;
-  roomUsers: User;
+  roomUsers: User[];
 }

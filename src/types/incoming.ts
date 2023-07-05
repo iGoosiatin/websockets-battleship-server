@@ -3,7 +3,7 @@ import { Identification, ShipToAdd } from './common';
 export enum IncomingCommand {
   Register = 'reg',
   CreateRoom = 'create_room',
-  AddPlayerToRoom = 'add_player_to_room',
+  AddPlayerToRoom = 'add_user_to_room',
   AddShips = 'add_ships',
   Attack = 'attack',
   RandomAttack = 'randomAttack',
@@ -43,7 +43,7 @@ export interface IncomingCreateRoomCommand extends Identification {
 }
 
 export interface IncomingAddPlayerToRoomCommand extends Identification {
-  type: IncomingCommand.CreateRoom;
+  type: IncomingCommand.AddPlayerToRoom;
   data: AddPlayerToRoomData;
 }
 

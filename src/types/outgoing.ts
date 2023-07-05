@@ -1,4 +1,4 @@
-import { AttackStatus, Identification, Position, User } from './common';
+import { AttackStatus, Identification, Position, Room, User, Winner } from './common';
 
 export enum OutgoingCommand {
   Register = 'reg',
@@ -15,10 +15,9 @@ export interface RegisterData extends User {
   errorText: string;
 }
 
-export interface UpdateWinnersData {
-  name: string;
-  wins: number;
-}
+export type UpdateWinnersData = Winner[];
+
+export type UpdateRoomData = Room[];
 
 export interface CreateGameData {
   idGame: number;
@@ -41,6 +40,7 @@ export interface FinishData {
 export type OutgoingData =
   | RegisterData
   | UpdateWinnersData
+  | UpdateRoomData
   | CreateGameData
   | CurrentPlayerData
   | AttackData
