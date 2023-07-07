@@ -30,14 +30,17 @@ export default class GameController {
         } = message;
         const result = this.userService.register(name, password, ws);
         const registrationResponse = buildOutgoingMessage(OutgoingCommand.Register, result);
+        console.log(`Responded personally: ${registrationResponse}`);
         ws.send(registrationResponse);
 
         const rooms = this.roomService.getRooms();
         const roomsResponse = buildOutgoingMessage(OutgoingCommand.UpdateRoom, rooms);
+        console.log(`Responded personally: ${roomsResponse}`);
         ws.send(roomsResponse);
 
         const winners = this.userService.getWinners();
         const winnersResponse = buildOutgoingMessage(OutgoingCommand.UpdateWinners, winners);
+        console.log(`Broadcasted: ${roomsResponse}`);
         this.broadcast(winnersResponse);
         break;
       }
@@ -47,6 +50,7 @@ export default class GameController {
         if (room) {
           const rooms = this.roomService.getRooms();
           const roomsResponse = buildOutgoingMessage(OutgoingCommand.UpdateRoom, rooms);
+          console.log(`Broadcasted: ${roomsResponse}`);
           this.broadcast(roomsResponse);
         }
         break;
@@ -62,6 +66,7 @@ export default class GameController {
         const rooms = this.roomService.getRooms();
         const roomsResponse = buildOutgoingMessage(OutgoingCommand.UpdateRoom, rooms);
         this.broadcast(roomsResponse);
+        console.log(`Broadcasted: ${roomsResponse}`);
         break;
       }
       case IncomingCommand.AddShips: {
@@ -87,6 +92,7 @@ export default class GameController {
           this.userService.processWinner(indexPlayer);
           const winners = this.userService.getWinners();
           const winnersResponse = buildOutgoingMessage(OutgoingCommand.UpdateWinners, winners);
+          console.log(`Broadcasted: ${winnersResponse}`);
           this.broadcast(winnersResponse);
         }
         break;

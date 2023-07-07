@@ -7,6 +7,7 @@ export default class RoomService {
   createRoom(ws: AuthedWebSocket) {
     const existingRoom = this.getRoomByUserId(ws.index);
     if (existingRoom) {
+      console.log('Skipped room creation: player cannot create more than 1 room');
       return null;
     }
 
@@ -18,11 +19,13 @@ export default class RoomService {
   addPlayerToRoom(ws: AuthedWebSocket, indexRoom: number) {
     const room = this.getRoomByRoomId(indexRoom);
     if (!room) {
+      console.log('Skipped room entering: room not found');
       return;
     }
 
     // Do not enter your own room
     if (room.roomUsers.find((roomUser) => roomUser.index === ws.index)) {
+      console.log('Skipped room entering: player cannot enter his own room');
       return;
     }
 
@@ -35,6 +38,7 @@ export default class RoomService {
   addShipsToGame(gameId: number, playerIndex: number, ships: Ship[]) {
     const room = this.getRoomByGameId(gameId);
     if (!room) {
+      console.log('Skipped skips adding: no room/game found');
       return;
     }
 
@@ -44,6 +48,7 @@ export default class RoomService {
   handleAttack(gameId: number, playerId: number, target: Position | null) {
     const room = this.getRoomByGameId(gameId);
     if (!room) {
+      console.log('Skipped attack: no room/game found');
       return;
     }
 

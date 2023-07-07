@@ -28,6 +28,7 @@ export default class RoomModel implements Room {
         idPlayer: ws.index,
       };
       const createGameResponse = buildOutgoingMessage(OutgoingCommand.CreateGame, gameDetails);
+      console.log(`Responded inside room: ${createGameResponse}`);
       ws.send(createGameResponse);
     });
   }
@@ -48,19 +49,22 @@ export default class RoomModel implements Room {
           currentPlayerIndex,
           ships: this.game.ships.get(ws.index) as Ship[],
         };
-        const createGameResponse = buildOutgoingMessage(OutgoingCommand.StartGame, gameDetails);
-        ws.send(createGameResponse);
+        const startGameResponse = buildOutgoingMessage(OutgoingCommand.StartGame, gameDetails);
+        console.log(`Responded inside room: ${startGameResponse}`);
+        ws.send(startGameResponse);
       });
     }
   }
 
   handleAttack(playerId: number, target: Position | null): boolean {
     if (this.attackInProcess || this.endOfGame) {
+      console.log('Skipped attack: other attack in process or end of game');
       return false;
     }
     const currentPlayerId = this.game.getCurrentPlayer();
 
     if (currentPlayerId !== playerId) {
+      console.log('Skipped attack: not players turn');
       return false;
     }
 
@@ -70,17 +74,20 @@ export default class RoomModel implements Room {
     this.endOfGame = this.game.checkEndOfGame(enemyId);
 
     this.sockets.forEach((ws) => {
-      const createGameResponse = buildOutgoingMessage(OutgoingCommand.Attack, result);
-      ws.send(createGameResponse);
+      const attackResponse = buildOutgoingMessage(OutgoingCommand.Attack, result);
+      console.log(`Responded inside room: ${attackResponse}`);
+      ws.send(attackResponse);
 
       if (result.status === AttackStatus.Miss) {
         this.game.setCurrentPlayer(enemyId);
         const changeTurnResponse = buildOutgoingMessage(OutgoingCommand.ChangeTurn, { currentPlayer: enemyId });
+        console.log(`Responded inside room: ${changeTurnResponse}`);
         ws.send(changeTurnResponse);
       }
 
       if (this.endOfGame) {
         const endOfGameResponse = buildOutgoingMessage(OutgoingCommand.Finish, { winPlayer: playerId });
+        console.log(`Responded inside room: ${endOfGameResponse}`);
         ws.send(endOfGameResponse);
       }
     });
