@@ -46,8 +46,8 @@ export default class UserService {
 
   processWinner(playerId: number) {
     const user = this.users.find(({ index }) => index === playerId) as UserModel;
-    this.winners = this.winners.map(({ name, wins }) =>
-      name === user.name ? { name, wins: wins + 1 } : { name, wins },
-    );
+    this.winners = this.winners
+      .map(({ name, wins }) => (name === user.name ? { name, wins: wins + 1 } : { name, wins }))
+      .sort((winnerA, winnerB) => winnerA.wins - winnerB.wins);
   }
 }
