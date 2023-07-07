@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { AttackStatus, Position, Ship } from '../types/common';
+import { getRandom } from '../utils';
 
 enum ShipState {
   Healthy = 'healty',
@@ -20,12 +20,14 @@ interface ShipData {
   parts: Part[];
 }
 
+const getRandomZeroToNine = getRandom.bind(null, 0, 9);
+
 export default class Game {
   private static index = 0;
+  private currentPlayer: number;
+  private shipsData = new Map<number, ShipData[]>();
   idGame: number;
   ships = new Map<number, Ship[]>();
-  shipsData = new Map<number, ShipData[]>();
-  private currentPlayer: number;
 
   constructor() {
     this.idGame = Game.index;
@@ -56,8 +58,7 @@ export default class Game {
   }
 
   handleAttack(currentPlayer: number, enemyId: number, possibleTarget: Position | null) {
-    // Fake random attack
-    const position = possibleTarget || { x: 0, y: 0 };
+    const position = possibleTarget || this.getRandomTarget();
 
     const status = this.processAttack(enemyId, position);
 
@@ -105,5 +106,12 @@ export default class Game {
 
     this.shipsData.set(enemyId, updatedShipData);
     return status;
+  }
+
+  private getRandomTarget(): Position {
+    return {
+      x: getRandomZeroToNine(),
+      y: getRandomZeroToNine(),
+    };
   }
 }
