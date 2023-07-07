@@ -27,6 +27,7 @@ export default class Game {
   private currentPlayer: number;
   private shipsData = new Map<number, ShipData[]>();
   idGame: number;
+  isStarted = false;
   ships = new Map<number, Ship[]>();
 
   constructor() {
@@ -35,7 +36,8 @@ export default class Game {
     return this;
   }
 
-  createBattlefieldMatrix() {
+  startGame() {
+    this.isStarted = true;
     this.ships.forEach((playerShips, playerId) => {
       const playerShipData: ShipData[] = [];
       playerShips.forEach(({ length, direction, position: { x, y } }) => {

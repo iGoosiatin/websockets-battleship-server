@@ -40,7 +40,7 @@ export default class GameController {
 
         const winners = this.userService.getWinners();
         const winnersResponse = buildOutgoingMessage(OutgoingCommand.UpdateWinners, winners);
-        console.log(`Broadcasted: ${roomsResponse}`);
+        console.log(`Broadcasted: ${winnersResponse}`);
         this.broadcast(winnersResponse);
         break;
       }
@@ -99,6 +99,31 @@ export default class GameController {
       }
       default: {
         console.log('Unknown command received');
+      }
+    }
+  }
+
+  handleDisconnectedSocket(ws: WebSocket) {
+    const { index, name } = ws as AuthedWebSocket;
+    if (index === undefined) {
+      console.log('Received: unknown user disconnect');
+    } else {
+      console.log(`Received: user ${name} disconnect`);
+      const { shouldUpdateRooms, shouldUpdateWinners, winner } = this.roomService.handleDisconnectedUser(index);
+
+      if (shouldUpdateRooms) {
+        const rooms = this.roomService.getRooms();
+        const roomsResponse = buildOutgoingMessage(OutgoingCommand.UpdateRoom, rooms);
+        this.broadcast(roomsResponse);
+        console.log(`Broadcasted: ${roomsResponse}`);
+      }
+
+      if (shouldUpdateWinners) {
+        winner !== undefined && this.userService.processWinner(winner);
+        const winners = this.userService.getWinners();
+        const winnersResponse = buildOutgoingMessage(OutgoingCommand.UpdateWinners, winners);
+        console.log(`Broadcasted: ${winnersResponse}`);
+        this.broadcast(winnersResponse);
       }
     }
   }

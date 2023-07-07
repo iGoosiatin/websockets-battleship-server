@@ -27,6 +27,10 @@ export default class WsServer {
           console.error(error);
         }
       });
+
+      ws.on('close', () => {
+        this.gameController.handleDisconnectedSocket(ws);
+      });
     });
   }
 

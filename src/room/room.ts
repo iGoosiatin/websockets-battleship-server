@@ -41,7 +41,7 @@ export default class RoomModel implements Room {
     this.game.ships.set(playerIndex, ships);
 
     if (this.game.ships.size === 2) {
-      this.game.createBattlefieldMatrix();
+      this.game.startGame();
       const currentPlayerIndex = this.game.getCurrentPlayer();
 
       this.sockets.forEach((ws) => {
@@ -93,6 +93,28 @@ export default class RoomModel implements Room {
     });
     this.attackInProcess = false;
     return this.endOfGame;
+  }
+
+  forceEndGame(loserId: number) {
+    const winnerId = this.getOtherPlayer(loserId);
+    const winnerWs = this.sockets.find(({ index }) => index === winnerId) as AuthedWebSocket;
+
+    // Send game start
+    if (!this.game.isStarted) {
+      const gameDetails: StartGameData = {
+        currentPlayerIndex: winnerId,
+        ships: this.game.ships.get(winnerId) as Ship[],
+      };
+      const startGameResponse = buildOutgoingMessage(OutgoingCommand.StartGame, gameDetails);
+      console.log(`Responded personally: ${startGameResponse}`);
+      winnerWs.send(startGameResponse);
+    }
+
+    const endOfGameResponse = buildOutgoingMessage(OutgoingCommand.Finish, { winPlayer: winnerId });
+    console.log(`Responded personally: ${endOfGameResponse}`);
+    winnerWs.send(endOfGameResponse);
+
+    return winnerId;
   }
 
   private getOtherPlayer(currentPlayerId: number) {

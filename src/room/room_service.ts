@@ -85,4 +85,24 @@ export default class RoomService {
     const room = this.rooms.find(({ roomUsers }) => roomUsers.find((roomUser) => roomUser.index === id));
     return room || null;
   }
+
+  handleDisconnectedUser(id: number) {
+    let shouldUpdateRooms = false;
+    let shouldUpdateWinners = false;
+    const room = this.getRoomByUserId(id);
+
+    if (!room) {
+      return { shouldUpdateRooms, shouldUpdateWinners };
+    }
+
+    shouldUpdateRooms = true;
+    if (!room.game) {
+      return { shouldUpdateRooms, shouldUpdateWinners };
+    }
+
+    shouldUpdateWinners = true;
+    const winner = room.forceEndGame(id);
+    this.closeRoom(room.roomId);
+    return { shouldUpdateRooms, shouldUpdateWinners, winner };
+  }
 }
