@@ -24,7 +24,7 @@ export default class RoomService {
     }
 
     // Do not enter your own room
-    if (room.roomUsers.find((roomUser) => roomUser.index === ws.index)) {
+    if (this.getRoomByUserId(ws.index)) {
       console.log('Skipped room entering: player cannot enter his own room');
       return;
     }
@@ -52,13 +52,23 @@ export default class RoomService {
       return;
     }
 
-    return room.handleAttack(playerId, target);
+    const isEndOfGame = room.handleAttack(playerId, target);
+
+    if (isEndOfGame) {
+      this.closeRoom(room.roomId);
+    }
+
+    return isEndOfGame;
   }
 
   getRooms() {
     return this.rooms
       .filter(({ roomUsers }) => roomUsers.length < 2)
       .map(({ roomId, roomUsers }) => ({ roomId, roomUsers }));
+  }
+
+  private closeRoom(id: number) {
+    this.rooms = this.rooms.filter(({ roomId }) => roomId !== id);
   }
 
   private getRoomByRoomId(id: number) {
