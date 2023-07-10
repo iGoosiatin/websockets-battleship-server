@@ -17,22 +17,28 @@ export default class RoomService {
   }
 
   addPlayerToRoom(ws: AuthedWebSocket, indexRoom: number) {
-    const room = this.getRoomByRoomId(indexRoom);
-    if (!room) {
+    const roomToEnter = this.getRoomByRoomId(indexRoom);
+    if (!roomToEnter) {
       console.log('Skipped room entering: room not found');
       return;
     }
 
-    // Do not enter your own room
-    if (this.getRoomByUserId(ws.index)) {
-      console.log('Skipped room entering: player cannot enter his own room');
-      return;
+    const potentialPlayersRoom = this.getRoomByUserId(ws.index);
+
+    if (potentialPlayersRoom) {
+      // Do not enter your own room
+      if (potentialPlayersRoom.roomId === indexRoom) {
+        console.log('Skipped room entering: player cannot enter his own room');
+        return;
+      }
+      // Close own room
+      this.closeRoom(potentialPlayersRoom.roomId);
     }
 
-    room.roomUsers.push({ name: ws.name, index: ws.index });
-    room.sockets.push(ws);
+    roomToEnter.roomUsers.push({ name: ws.name, index: ws.index });
+    roomToEnter.sockets.push(ws);
 
-    room.createGame();
+    roomToEnter.createGame();
   }
 
   addShipsToGame(gameId: number, playerIndex: number, ships: Ship[]) {
