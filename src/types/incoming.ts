@@ -7,6 +7,7 @@ export enum IncomingCommand {
   AddShips = 'add_ships',
   Attack = 'attack',
   RandomAttack = 'randomAttack',
+  SinglePlay = 'single_play',
 }
 
 export interface RegisterData {
@@ -59,13 +60,19 @@ export interface IncomingRandomAttackCommand extends Identification {
   data: GeneralGameData;
 }
 
+export interface IncomingSinglePlayCommand extends Identification {
+  type: IncomingCommand.SinglePlay;
+  data: '';
+}
+
 export type IncomingMessage =
   | IncomingRegisterCommand
   | IncomingCreateRoomCommand
   | IncomingAddPlayerToRoomCommand
   | IncomingAddShipsCommand
   | IncomingAttackCommand
-  | IncomingRandomAttackCommand;
+  | IncomingRandomAttackCommand
+  | IncomingSinglePlayCommand;
 
 export type RawIncomingMessage = Identification & {
   type: IncomingCommand;

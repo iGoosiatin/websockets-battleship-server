@@ -1,8 +1,14 @@
 import RoomModel from './room';
 import { AuthedWebSocket, Position, Ship } from '../types/common';
+import SinglePlayService from '../single_play/single_play_service';
 
 export default class RoomService {
   private rooms: RoomModel[] = [];
+  private singlePlayService: SinglePlayService;
+
+  constructor(singlePlayService: SinglePlayService) {
+    this.singlePlayService = singlePlayService;
+  }
 
   createRoom(ws: AuthedWebSocket) {
     const existingRoom = this.getRoomByUserId(ws.index);
@@ -44,7 +50,12 @@ export default class RoomService {
   addShipsToGame(gameId: number, playerIndex: number, ships: Ship[]) {
     const room = this.getRoomByGameId(gameId);
     if (!room) {
-      console.log('Skipped skips adding: no room/game found');
+      const game = this.singlePlayService.getGameById(gameId);
+      if (!game) {
+        console.log('Skipped ships adding: no room/game found');
+        return;
+      }
+      this.singlePlayService.addPlayerShips(gameId, playerIndex, ships);
       return;
     }
 
@@ -54,7 +65,12 @@ export default class RoomService {
   handleAttack(gameId: number, playerId: number, target: Position | null) {
     const room = this.getRoomByGameId(gameId);
     if (!room) {
-      console.log('Skipped attack: no room/game found');
+      const game = this.singlePlayService.getGameById(gameId);
+      if (!game) {
+        console.log('Skipped attack: no room/game found');
+        return;
+      }
+      this.singlePlayService.handlePlayerAttack(gameId, target);
       return;
     }
 

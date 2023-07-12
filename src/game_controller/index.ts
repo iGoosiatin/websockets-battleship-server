@@ -5,11 +5,13 @@ import { WebSocket } from 'ws';
 import RoomService from '../room/room_service';
 import { AuthedWebSocket, Position } from '../types/common';
 import { buildOutgoingMessage } from '../utils';
+import SinglePlayService from '../single_play/single_play_service';
 
 export default class GameController {
   private broadcast: (message: string) => void;
   private userService = new UserService();
-  private roomService = new RoomService();
+  private singlePlayService = new SinglePlayService();
+  private roomService = new RoomService(this.singlePlayService);
 
   constructor(broadcast: (message: string) => void) {
     this.broadcast = broadcast;
@@ -95,6 +97,10 @@ export default class GameController {
           console.log(`Broadcasted: ${winnersResponse}`);
           this.broadcast(winnersResponse);
         }
+        break;
+      }
+      case IncomingCommand.SinglePlay: {
+        this.singlePlayService.startGame(ws as AuthedWebSocket);
         break;
       }
       default: {
