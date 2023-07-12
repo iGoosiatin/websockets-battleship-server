@@ -1,5 +1,9 @@
 # RSSchool NodeJS websocket battleship task
-> Static http server and websocket server.
+> Static http server and websocket server for battleship game
+
+**NOTES**
+- Once player is registered, winners table is updated.
+- Random attack and bot are plain simple. Win against a bot is not counted in total score.
 
 ## Installation
 1. Clone/download repo
