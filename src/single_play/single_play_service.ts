@@ -12,7 +12,7 @@ export default class SinglePlayService {
   private singlePlayGames: SinglePlayGame[] = [];
 
   startGame(ws: AuthedWebSocket) {
-    const singlePlayGame = new SinglePlayGame(ws);
+    const singlePlayGame = new SinglePlayGame(ws, SinglePlayService.BOT_ID);
     this.singlePlayGames.push(singlePlayGame);
     const gameDetails: CreateGameData = {
       idGame: singlePlayGame.game.idGame,

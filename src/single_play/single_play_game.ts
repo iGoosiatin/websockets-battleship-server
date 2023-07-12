@@ -2,16 +2,19 @@ import Game from '../game';
 import { AttackStatus, AuthedWebSocket, Position } from '../types/common';
 import { OutgoingCommand } from '../types/outgoing';
 import { buildOutgoingMessage } from '../utils';
+import Bot from './bot';
 
 export default class SinglePlayGame {
   ws: AuthedWebSocket;
   game: Game;
   isAttackInProcess = false;
   isEndOfGame = false;
+  private bot: Bot;
 
-  constructor(ws: AuthedWebSocket) {
+  constructor(ws: AuthedWebSocket, botId: number) {
     this.ws = ws;
     this.game = new Game();
+    this.bot = new Bot(botId, ws, this.game);
   }
 
   handleAttack(target: Position | null, botId: number) {
@@ -40,7 +43,7 @@ export default class SinglePlayGame {
       const changeTurnResponse = buildOutgoingMessage(OutgoingCommand.ChangeTurn, { currentPlayer: botId });
       console.log(`Responded personally: ${changeTurnResponse}`);
       this.ws.send(changeTurnResponse);
-      // TODO: bot action here
+      this.bot.takeover();
     }
 
     if (this.isEndOfGame) {
