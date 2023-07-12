@@ -70,13 +70,23 @@ export default class RoomModel implements Room {
 
     this.attackInProcess = true;
     const enemyId = this.getOtherPlayer(playerId);
-    const result = this.game.handleAttack(playerId, enemyId, target);
+    const { extraShots, ...result } = this.game.handleAttack(playerId, enemyId, target);
     this.endOfGame = this.game.checkEndOfGame(enemyId);
 
     this.sockets.forEach((ws) => {
       const attackResponse = buildOutgoingMessage(OutgoingCommand.Attack, result);
       console.log(`Responded inside room: ${attackResponse}`);
       ws.send(attackResponse);
+
+      extraShots.forEach((shot) => {
+        const extraShotResponse = buildOutgoingMessage(OutgoingCommand.Attack, {
+          currentPlayer: playerId,
+          status: AttackStatus.Miss,
+          position: shot,
+        });
+        console.log(`Responded inside room: ${extraShotResponse}`);
+        ws.send(extraShotResponse);
+      });
 
       if (result.status === AttackStatus.Miss) {
         this.game.setCurrentPlayer(enemyId);

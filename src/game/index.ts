@@ -62,12 +62,13 @@ export default class Game {
   handleAttack(currentPlayer: number, enemyId: number, possibleTarget: Position | null) {
     const position = possibleTarget || this.getRandomTarget();
 
-    const status = this.processAttack(enemyId, position);
+    const { status, extraShots } = this.processAttack(enemyId, position);
 
     return {
       currentPlayer,
       position,
       status,
+      extraShots,
     };
   }
 
@@ -76,9 +77,10 @@ export default class Game {
     return enemyShipData.every(({ state }) => state === ShipState.Sunk);
   }
 
-  private processAttack(enemyId: number, target: Position): AttackStatus {
+  private processAttack(enemyId: number, target: Position) {
     const enemyShipData = this.shipsData.get(enemyId) as ShipData[];
     let status = AttackStatus.Miss;
+    let extraShots: Position[] = [];
     const updatedShipData = enemyShipData.map(({ state, parts }) => {
       let updatedShipState = state;
       let updatedParts = parts.map(({ partState, x, y }) => {
@@ -96,6 +98,7 @@ export default class Game {
       });
 
       if (updatedParts.length > 0 && updatedParts.every(({ partState }) => partState === PartState.Damaged)) {
+        extraShots = this.buildExtraShots(updatedParts);
         updatedParts = [];
         updatedShipState = ShipState.Sunk;
         status = AttackStatus.Killed;
@@ -107,7 +110,7 @@ export default class Game {
     });
 
     this.shipsData.set(enemyId, updatedShipData);
-    return status;
+    return { status, extraShots };
   }
 
   private getRandomTarget(): Position {
@@ -115,5 +118,31 @@ export default class Game {
       x: getRandomZeroToNine(),
       y: getRandomZeroToNine(),
     };
+  }
+
+  private buildExtraShots(parts: Part[]): Position[] {
+    const extraShots = parts.reduce((extraShots, part) => {
+      for (let x = part.x - 1; x <= part.x + 1; x++) {
+        if (!this.isValidPoint(x)) {
+          continue;
+        }
+        for (let y = part.y - 1; y <= part.y + 1; y++) {
+          if (!this.isValidPoint(y)) {
+            continue;
+          }
+          const isPart = parts.find((part) => part.x === x && part.y === y);
+          const isDuplicate = extraShots.find((position) => position.x === x && position.y === y);
+          if (!isPart && !isDuplicate) {
+            extraShots.push({ x, y });
+          }
+        }
+      }
+      return extraShots;
+    }, [] as Position[]);
+    return extraShots;
+  }
+
+  private isValidPoint(point: number) {
+    return point >= 0 && point <= 9;
   }
 }

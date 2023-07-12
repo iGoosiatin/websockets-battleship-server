@@ -16,11 +16,21 @@ export default class Bot {
 
   takeover() {
     setTimeout(() => {
-      const result = this.game.handleAttack(this.botId, this.enemyWs.index, null);
+      const { extraShots, ...result } = this.game.handleAttack(this.botId, this.enemyWs.index, null);
 
       const attackResponse = buildOutgoingMessage(OutgoingCommand.Attack, result);
       console.log(`Responded personally: ${attackResponse}`);
       this.enemyWs.send(attackResponse);
+
+      extraShots.forEach((shot) => {
+        const extraShotResponse = buildOutgoingMessage(OutgoingCommand.Attack, {
+          currentPlayer: this.botId,
+          status: AttackStatus.Miss,
+          position: shot,
+        });
+        console.log(`Responded personally: ${extraShotResponse}`);
+        this.enemyWs.send(extraShotResponse);
+      });
 
       if (result.status === AttackStatus.Miss) {
         this.game.setCurrentPlayer(this.enemyWs.index);

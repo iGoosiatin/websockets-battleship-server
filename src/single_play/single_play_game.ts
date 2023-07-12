@@ -31,12 +31,22 @@ export default class SinglePlayGame {
 
     this.isAttackInProcess = true;
 
-    const result = this.game.handleAttack(this.ws.index, botId, target);
+    const { extraShots, ...result } = this.game.handleAttack(this.ws.index, botId, target);
     this.isEndOfGame = this.game.checkEndOfGame(botId);
 
     const attackResponse = buildOutgoingMessage(OutgoingCommand.Attack, result);
     console.log(`Responded personally: ${attackResponse}`);
     this.ws.send(attackResponse);
+
+    extraShots.forEach((shot) => {
+      const extraShotResponse = buildOutgoingMessage(OutgoingCommand.Attack, {
+        currentPlayer: this.ws.index,
+        status: AttackStatus.Miss,
+        position: shot,
+      });
+      console.log(`Responded personally ${extraShotResponse}`);
+      this.ws.send(extraShotResponse);
+    });
 
     if (result.status === AttackStatus.Miss) {
       this.game.setCurrentPlayer(botId);
