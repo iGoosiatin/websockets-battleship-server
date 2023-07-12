@@ -4,6 +4,7 @@ import { OutgoingCommand } from '../types/outgoing';
 import { buildOutgoingMessage, getRandom } from '../utils';
 
 const getRandomZeroToNine = getRandom.bind(null, 0, 9);
+const getTrueOrFalse = () => getRandom(0, 1) === 1;
 
 export default class Bot {
   private botId: number;
@@ -17,9 +18,9 @@ export default class Bot {
     this.enemyWs = ws;
   }
 
-  takeover() {
+  takeover(closeTo?: Position) {
     setTimeout(() => {
-      const target = this.generateTarget();
+      const target = this.generateTarget(closeTo);
 
       const { extraShots, ...result } = this.game.handleAttack(this.botId, this.enemyWs.index, target);
 
@@ -55,18 +56,46 @@ export default class Bot {
           return;
         }
 
-        this.takeover();
+        this.takeover(result.status === AttackStatus.Shot ? target : undefined);
       }
     }, 1500);
   }
 
-  generateTarget(): Position {
-    const possibleTarget = { x: getRandomZeroToNine(), y: getRandomZeroToNine() };
+  private generateTarget(closeTo?: Position): Position {
+    const possibleTarget = closeTo
+      ? this.generateCloseTarget(closeTo)
+      : { x: getRandomZeroToNine(), y: getRandomZeroToNine() };
     if (this.recordedShots.find((shot) => shot.x === possibleTarget.x && shot.y === possibleTarget.y)) {
-      return this.generateTarget();
+      return this.generateTarget(closeTo);
     } else {
       this.recordedShots.push(possibleTarget);
       return possibleTarget;
+    }
+  }
+
+  private generateCloseTarget(closeTo: Position): Position {
+    const { x, y } = closeTo;
+
+    const isXScale = getTrueOrFalse();
+
+    if (isXScale) {
+      if (x === 0) {
+        return { x: x + 1, y };
+      }
+      if (x === 9) {
+        return { x: x - 1, y };
+      }
+      const shouldAdd = getTrueOrFalse();
+      return { x: shouldAdd ? x + 1 : x - 1, y };
+    } else {
+      if (y === 0) {
+        return { x, y: y + 1 };
+      }
+      if (y === 9) {
+        return { x, y: y - 1 };
+      }
+      const shouldAdd = getTrueOrFalse();
+      return { x, y: shouldAdd ? y + 1 : y - 1 };
     }
   }
 }
