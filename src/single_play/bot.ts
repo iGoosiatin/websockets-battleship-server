@@ -1,12 +1,15 @@
 import Game from '../game';
-import { AttackStatus, AuthedWebSocket } from '../types/common';
+import { AttackStatus, AuthedWebSocket, Position } from '../types/common';
 import { OutgoingCommand } from '../types/outgoing';
-import { buildOutgoingMessage } from '../utils';
+import { buildOutgoingMessage, getRandom } from '../utils';
+
+const getRandomZeroToNine = getRandom.bind(null, 0, 9);
 
 export default class Bot {
   private botId: number;
   private game: Game;
   private enemyWs: AuthedWebSocket;
+  private recordedShots: Position[] = [];
 
   constructor(botId: number, ws: AuthedWebSocket, game: Game) {
     this.botId = botId;
@@ -16,13 +19,16 @@ export default class Bot {
 
   takeover() {
     setTimeout(() => {
-      const { extraShots, ...result } = this.game.handleAttack(this.botId, this.enemyWs.index, null);
+      const target = this.generateTarget();
+
+      const { extraShots, ...result } = this.game.handleAttack(this.botId, this.enemyWs.index, target);
 
       const attackResponse = buildOutgoingMessage(OutgoingCommand.Attack, result);
       console.log(`Responded personally: ${attackResponse}`);
       this.enemyWs.send(attackResponse);
 
       extraShots.forEach((shot) => {
+        this.recordedShots.push(shot);
         const extraShotResponse = buildOutgoingMessage(OutgoingCommand.Attack, {
           currentPlayer: this.botId,
           status: AttackStatus.Miss,
@@ -52,5 +58,15 @@ export default class Bot {
         this.takeover();
       }
     }, 1500);
+  }
+
+  generateTarget(): Position {
+    const possibleTarget = { x: getRandomZeroToNine(), y: getRandomZeroToNine() };
+    if (this.recordedShots.find((shot) => shot.x === possibleTarget.x && shot.y === possibleTarget.y)) {
+      return this.generateTarget();
+    } else {
+      this.recordedShots.push(possibleTarget);
+      return possibleTarget;
+    }
   }
 }
